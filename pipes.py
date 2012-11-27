@@ -1,31 +1,39 @@
-def pipe(*args):
-    """Returns a pipe-enabled function"""
+class Pipe(object):
+    """A Pipe-enabled function wrapper"""
 
-    def pipemethod(arg, kwarg):
-        def ret(self):
-            return (arg, kwarg)
-        return ret
+    def __init__(self, func, arg=None, kwarg=None):
+        self.func = func
+        self.arg = self.kwarg = None
 
+    def __call__(self, *args, **kwargs):
+        return self.func(*args, **kwargs)
+
+    def __pipe__(self, pipein, *args, **kwargs):
+        if self.arg is not None:
+            args = args[:self.arg] + (pipein,) + args[self.arg:]
+        elif self.kwarg is not None:
+            kwargs[self.kwarg] = pipein
+        return self.func(*args, **kwargs)
+
+def pipedecorator(*args):
+    """a decorator to make a function a pipeable function"""
     if len(args) > 2:
         raise ValueError('Too many arguments')
     elif len(args) == 2:
-        # args must be a (int,str) tuple
-        if args[0] != None and not isinstance(int, args[0]):
-            raise ValueError('First Argument was not an int')
-        if args[1] != None and not isinstance(basestring, args[1]):
-            raise ValueError('Second Argument was not a str')
-        def wrapper(fun):
-            fun.__pipe__ = pipemethod(args[0], args[1])
+        def wrapper(func):
+            return Pipe(func, arg=args[0], kwarg=args[1])
         return wrapper
     elif len(args) == 1:
-        if isinstance(int, args[0]):
-            def wrapper(fun):
-                fun__pipe__ = pipemethod(args[0], None)
+        if isinstance(args[0], int):
+            def wrapper(func):
+                return Pipe(func, arg=args[0])
             return wrapper
-        if isinstance(basestring, args[0]):
-            def wrapper(fun):
-                fun.__pipe__ = pipemethod(None, args[0])
+        elif isinstance(args[0], basestring):
+            def wrapper(func):
+                return Pipe(func, kwarg=args[0])
             return wrapper
         else:
-            args[0].__pipe__ = pipemethod(0, None)
-            return args[0]
+            # This is doing the decorating
+            return Pipe(args[0], arg=0)
+    else:
+        raise ValueError('Not enough argments')
