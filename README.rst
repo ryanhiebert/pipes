@@ -18,6 +18,32 @@ def __pipe__():
     positional args to make the difference.
     """
 
+Pipeline Protocol (New Idea)
+============================
+The Pipeline Protocol defines a new special property:
+
+def __pipe__(pipein, \*args, \*\*kwargs):
+    """
+    the method that will be called when the pipeline operator is used.
+    The pipeline input will be the first argument, unless there is an
+    implicit self argument. When used in a pipeline, the pipein
+    argument will be passed in implicitly, similarly to a method call.
+    """
+
+For the sake of an example, we will demonstrate what this does with
+the bitwise or operator, which will NOT be recommended for use as the
+pipeline operator.
+
+Here's an example pipeline:
+
+range(10) | foo.bar().spam(3)
+
+translates to:
+
+foo.bar().spam.__pipe__(range(10), spam(3))
+
+The pipe must end with a function call, else it is a syntax error.
+
 Pipeline Decorator
 ==================
 The pipeline decorator (@pipe) adds a __pipe__() method to a function.
